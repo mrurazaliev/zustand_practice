@@ -1,15 +1,18 @@
-import { useState, type FormEvent } from 'react'
-import { useTodo, type Todo } from '../store/todo.store'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useEffect, useState, type FormEvent } from "react";
+import { useTodo, type Todo } from "../store/todo.store";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 import {
-   Card,
-   CardContent,
-   CardFooter,
-   CardHeader,
-   CardTitle,
-} from '@/components/ui/card'
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
 import {
   Dialog,
   DialogContent,
@@ -17,7 +20,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,141 +31,178 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+} from "@/components/ui/alert-dialog";
 
 function Home() {
-  const { todos, addUser, editUser, deleteUser } = useTodo()
+  const { todo, getData, addUser, editUser, deleteUser } = useTodo();
 
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState('')
-  const [age, setAge] = useState('')
-  const [editId, setEditId] = useState<number | null>(null)
-  const [deleteId, setDeleteId] = useState<number | null>(null)
-  const [error, setError] = useState('')
-  const [search,setSearch]=useState("")
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [search, setSearch] = useState("");
+
+  const [editId, setEditId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(()=>{
+    getData()
+  },[])
 
   function handleOpenAdd() {
-    setName('')
-    setAge('')
-    setEditId(null)
-    setError('')
-    setOpen(true)
+    setName("");
+    setDescription("");
+    setEditId(null);
+    setError("");
+    setOpen(true);
   }
 
-  function handleEdit(elem: Todo) {
-    setName(elem.name)
-    setAge(String(elem.age))
-    setEditId(elem.id)
-    setError('')
-    setOpen(true)
+  function handleEdit(item: Todo) {
+    setName(item.name);
+    setDescription(item.description);
+    setEditId(item.id);
+    setError("");
+    setOpen(true);
   }
 
-  function handleDelete() {
-    if (deleteId === null) return
+  async function handleSave(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
 
-    deleteUser(deleteId)
+  
 
-    if (editId === deleteId) {
-      setEditId(null)
-      setOpen(false)
-    }
+    setSaving(true);
+    setError("");
 
-    setDeleteId(null)
-  }
-
-  function handleSave(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-
-    const userAge = Number(age)
-
-    if (!name.trim() || !Number.isInteger(userAge) || userAge <= 0) {
-      setError('Введи имя и целый возраст больше нуля.')
-      return
-    }
-
-    if (editId !== null) {
-      editUser({
-        id: editId,
+    try {
+      const newTodo = {
         name: name.trim(),
-        age: userAge,
-      })
-    } else {
-      addUser({
-        id: Date.now(),
-        name: name.trim(),
-        age: userAge,
-      })
-    }
+        description: description.trim(),
+      };
 
-    setName('')
-    setAge('')
-    setEditId(null)
-    setError('')
-    setOpen(false)
+      if (editId !== null) {
+        await editUser(editId, newTodo);
+      } else {
+        await addUser(newTodo);
+      }
+
+      setName("");
+      setDescription("");
+      setEditId(null);
+      setOpen(false);
+    } catch (error) {
+      console.error(error);
+      setError("Не удалось сохранить данные");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  const filteresTodos=todos.filter((e)=>e.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()))
+  async function handleDelete() {
+    if (deleteId === null) return;
+
+    setDeleting(true);
+
+    try {
+      await deleteUser(deleteId);
+      setDeleteId(null);
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  const filteredTodos = todo.filter((item) =>
+    item.name.toLowerCase().includes(search.trim().toLowerCase())
+  );
 
   return (
-    <main className="mx-auto w-full max-w-5xl space-y-6 p-4 sm:p-8">
+    <main className="mx-auto min-h-screen max-w-6xl space-y-8 p-4 sm:p-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Users</h1>
-          <p className="text-sm text-muted-foreground">
-            Total users: {todos.length}
+          <h1 className="text-3xl font-bold">Todo Management</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Total todos: {todo.length}
           </p>
         </div>
 
+        <div className="flex flex-wrap gap-3">
+          <Input
+            type="search"
+            placeholder="Search todos..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-60"
+          />
 
-        <div>
-              
-              <Input
-              type="search"
-              placeholder="Поиск по имени..."
-              aria-label="Поиск по имени"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-
-              />
+          <Button onClick={handleOpenAdd}>+ Add Todo</Button>
         </div>
-
-
-        <Button type="button" onClick={handleOpenAdd}>
-          + Add user
-        </Button>
       </div>
 
-      {todos.length === 0 && (
+      {loading && (
+        <p className="text-center text-muted-foreground">
+          Loading...
+        </p>
+      )}
+
+      {!loading && todo.length === 0 && (
         <Card>
           <CardContent className="py-10 text-center text-muted-foreground">
-            Список пуст. Добавь первого пользователя.
+            No todos found. Add your first todo.
           </CardContent>
         </Card>
       )}
 
+      {!loading &&
+        todo.length > 0 &&
+        filteredTodos.length === 0 && (
+          <p className="text-center text-muted-foreground">
+            No matching todos found.
+          </p>
+        )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteresTodos.map((elem) => (
-          <Card key={elem.id} className="min-w-0">
+        {filteredTodos.map((item) => (
+          <Card key={item.id} className="min-w-0">
             <CardHeader>
-              <CardTitle className="break-words">{elem.name}</CardTitle>
+              <CardTitle className="break-words">
+                {item.name}
+              </CardTitle>
             </CardHeader>
 
-            <CardContent>
-              <p className="text-muted-foreground">Age: {elem.age}</p>
+            <CardContent className="space-y-3">
+              <p className="break-words text-muted-foreground">
+                {item.description}
+              </p>
+
+              <span
+                className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
+                  item.isCompleted
+                    ? "bg-green-100 text-green-700"
+                    : "bg-yellow-100 text-yellow-700"
+                }`}
+              >
+                {item.isCompleted ? "Completed" : "Pending"}
+              </span>
             </CardContent>
 
-            <CardFooter className="flex flex-wrap gap-2">
+            <CardFooter className="flex gap-2">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => handleEdit(elem)}
+                onClick={() => handleEdit(item)}
               >
                 Edit
               </Button>
+
               <Button
                 type="button"
                 variant="destructive"
-                onClick={() => setDeleteId(elem.id)}
+                onClick={() => setDeleteId(item.id)}
               >
                 Delete
               </Button>
@@ -170,39 +211,48 @@ function Home() {
         ))}
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(value) => {
+          if (!saving) setOpen(value);
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editId !== null ? 'Edit user' : 'Add user'}
+              {editId !== null ? "Edit Todo" : "Add Todo"}
             </DialogTitle>
+
             <DialogDescription>
-              Введи имя и возраст, затем нажми Save.
+              Enter todo details and click Save.
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSave} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="user-name">Name</Label>
+              <Label htmlFor="todo-name">Name</Label>
+
               <Input
-                id="user-name"
+                id="todo-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter name"
+                placeholder="Enter todo name"
+                disabled={saving}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="user-age">Age</Label>
+              <Label htmlFor="todo-description">
+                Description
+              </Label>
+
               <Input
-                id="user-age"
-                type="number"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                placeholder="Enter age"
-                min="1"
-                step="1"
+                id="todo-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter description"
+                disabled={saving}
                 required
               />
             </div>
@@ -218,10 +268,14 @@ function Home() {
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
+                disabled={saving}
               >
                 Cancel
               </Button>
-              <Button type="submit">Save</Button>
+
+              <Button type="submit" disabled={saving}>
+                {saving ? "Saving..." : "Save"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -230,28 +284,43 @@ function Home() {
       <AlertDialog
         open={deleteId !== null}
         onOpenChange={(value) => {
-          if (!value) setDeleteId(null)
+          if (!value && !deleting) {
+            setDeleteId(null);
+          }
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Удалить пользователя?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Delete Todo?
+            </AlertDialogTitle>
+
             <AlertDialogDescription>
-              Пользователь будет удалён из списка.
+              Are you sure you want to delete this todo?
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              Delete
+            <AlertDialogCancel disabled={deleting}>
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(e) => {
+                e.preventDefault();
+                void handleDelete();
+              }}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </main>
-  )
+  );
 }
 
-export default Home
-
+export default Home;
