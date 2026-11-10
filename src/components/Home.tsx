@@ -1,100 +1,88 @@
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState } from '../store/store'
-import { addUser, deleteUser, editUser, type Todo } from '../slice/counterSlice'
-import { useState, type FormEvent} from 'react'
+import { addUSer, deleteUser, editUser, type Todo } from '../slice/counterSlice'
+import { useState, type FormEvent } from 'react'
 
 function Home() {
-  const dispatch = useDispatch()
+  const dispatch=useDispatch()
+  
+  const data=useSelector((state:RootState)=>state.Todochka.todo)
 
-  const data = useSelector(
-    (state: RootState) => state.counter.todo
-  )
-
-  const [open,setOpen]=useState(false)
   const [name,setName]=useState("")
   const [job,setJob]=useState("")
-  const [editId,setEditId]=useState<number|null>(null)
+  const [editId,setEditId]=useState<null|number>(null)
+  const [open,setOpen]=useState(false)
 
-function handleDelete(id:number) {
-  dispatch(deleteUser(id))
-}
 
-function handleAdd() {
+ function handleDelete(id:number) {
+ dispatch( deleteUser(id))
+ }
+
+ function handleOpenAdd() {
   setName("")
+  setEditId(null)
   setJob("")
-  setEditId(null)
   setOpen(true)
-}
+ }
+ function hadleOpenEdit(e:Todo) {
+   setName(e.name)
+  setEditId(e.id)
+  setJob(e.job)
+  setOpen(true)
+ }
 
-function handleOpenEdit(e:Todo) {
- setName(e.name)
- setJob(e.job)
- setEditId(e.id)
- setOpen(true)  
-}
+ function handleSubmit(e:FormEvent<HTMLFormElement>) {
+    e.preventDefault()
 
-function handleSave(e: FormEvent<HTMLFormElement>) {
-  e.preventDefault()
+    if(editId!==null){
+      dispatch(editUser({
+        id:editId,
+        name:name,
+        job:job
+      }))
+    }
+    else{
+      dispatch(addUSer({
+        id:Date.now(),
+        name:name,
+        job:job
+      }))
 
- 
-
-  if (editId !== null) {
-    dispatch(editUser({
-      id: editId,
-      name: name.trim(),
-      job: job.trim()
-    }))
-  } else {
-    dispatch(addUser({
-      id: Date.now(),
-      name: name.trim(),
-      job: job.trim()
-    }))
-  }
-
-  setName('')
-  setJob('')
-  setEditId(null)
-  setOpen(false)
-}
-
-
+    }
+    setEditId(null)
+    setJob("")
+    setName("")
+    setOpen(false)
+ }
 
   return (
-   
-<div className='flex justify-center items-center gap-5'>
-  <h1>Todo List </h1>
-  <button onClick={handleAdd}>+add user</button>
 
-<div>
-{ open && ( <form onSubmit={handleSave}>
-    <input type="text" name="name" value={name} placeholder='Name' onChange={(e)=>setName(e.target.value)} id="" />
-    <input type="text" name="job" value={job} placeholder='Job' onChange={(e)=>setJob(e.target.value)} id="" />
-    <button  type='submit'>{editId!==null ? "Save changes" : "Submit"}</button>
-    <button type='button' onClick={()=>setOpen(false)}>Cancel</button>
-  </form>)
-  }
-</div>
+    <div>
+      <button onClick={handleOpenAdd}>+add user</button>
+      <h1>Users list</h1>
+      
+       <div>
+{open && (<form onSubmit={handleSubmit}>
+          <input type="text" name="name" placeholder='Name' value={name} onChange={(e)=>setName(e.target.value)} id="" />
+          <input type="text" name="job" placeholder='Job' value={job} onChange={(e)=>setJob(e.target.value)} id="" />
+          <button type='submit'>{editId===null?"Submit":"Save changes"}</button>
+          <button onClick={()=>setOpen(false)}>Cancel</button>
+        </form>)}
+       </div>
 
-        {data.map((e) => (
-          <div
-            key={e.id}
-            className="rounded-xl border p-5 shadow "
-          >
-            <h2 className="text-xl font-bold">
-              {e.name}
-            </h2>
-
-            <p className="text-gray-500">
-              {e.job}
-            </p>
-            <button onClick={()=>handleDelete(e.id)}>Delete</button>
-            <button onClick={()=>handleOpenEdit(e)}>edit</button>
-          </div>
-        ))}
-
-      </div>
-   
+      {
+        data.map((e)=>{
+          return(
+            <div key={e.id}>
+              <h2>{e.name}</h2>
+              <p>{e.job}</p>
+              <button onClick={()=>handleDelete(e.id)}>Delete</button>
+              <button onClick={()=>hadleOpenEdit(e)}>Edit</button>
+            </div>
+          )
+        })
+      }
+    </div>
   )
 }
 

@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 
 export interface Todo{
     id:number,
@@ -6,53 +6,45 @@ export interface Todo{
     job:string
 }
 
-interface CounterState {
-  
-  todo:Todo[]
+interface CounterState{
+    todo:Todo[]
 }
 
-const initialState: CounterState = {
-  todo:[
+const initialState:CounterState={
+todo:[
     {
         id:1,
-        name:"SAnjar",
-        job:"Student"
-
-    },
-      {
-        id:2,
-        name:"Jonibek",
-        job:"frontend-developer"
-
-    },  {
-        id:3,
         name:"Muhammad",
-        job:"Student"
-
+        job:"student"
+    },
+        {
+        id:2,
+        name:"Sanjar",
+        job:"Builder"
+    },
+        {
+        id:3,
+        name:"Jonibek",
+        job:"Developer"
     }
-  ]
-};
+],
+}
 
-const counterSlice = createSlice({
-  name: "counter",
-  initialState,
+ const counterSlice=createSlice({
+ name:"Todochka",
+ initialState,
 
-  reducers: {
- 
+ reducers:{
   deleteUser:(state,action:PayloadAction<number>)=>{
     state.todo=state.todo.filter((e)=>e.id!==action.payload)
   },
-   addUser:(state,action:PayloadAction<Todo>)=>{
-    state.todo=[...state.todo,action.payload]
- },
- editUser:(state,action:PayloadAction<Todo>)=>{
- state.todo=state.todo.map((e)=>e.id===action.payload.id?action.payload:e)
-},
+  addUSer:(state,action:PayloadAction<Todo>)=>{
+    state.todo.push(action.payload)
   },
-
-});
-
-export const { deleteUser,addUser,editUser } =
-  counterSlice.actions;
-
-export default counterSlice.reducer;
+  editUser:(state,action:PayloadAction<Todo>)=>{
+    state.todo=state.todo.map((e)=>e.id===action.payload.id?action.payload:e)
+  }
+ }
+})
+export const {deleteUser,addUSer,editUser}=counterSlice.actions
+export default counterSlice.reducer
