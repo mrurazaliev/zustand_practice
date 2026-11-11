@@ -1,86 +1,38 @@
-import axios from "axios";
-import { create } from "zustand";
+import { create } from 'zustand'
 
-export const api = "https://to-dos-api.softclub.tj/api/to-dos";
-
-interface Image {
-  id: number;
-  imageName: string;
+interface Todo {
+  id: number
+  age: number
 }
 
-export interface Todo {
-  id: number;
-  isCompleted: boolean;
-  images: Image[];
-  name: string;
-  description: string;
+interface TodoStore {
+  users: User[]
+  deleteUser: (id: number) => void
+  addUser: (newUser: Todo) => void
+  editUser:(editedUser:Todo)=>void
 }
 
-interface TodoForm {
-  name: string;
-  description: string;
-}
+export const useUserStore = create<TodoStore>()((set) => ({
+  users: [
+    { id: 1, age: 19 },
+    { id: 2, age: 21 },
+    { id: 3, age: 20 }
+  ],
 
-interface TodoState {
-  todo: Todo[];
-  getData: () => Promise<void>;
-  addUser: (newUser: TodoForm) => Promise<void>;
-  editUser: (id: number, updatedUser: TodoForm) => Promise<void>;
-  deleteUser: (id: number) => Promise<void>;
-}
-
-export const useTodo = create<TodoState>((set, get) => ({
-  todo: [],
-
-  getData: async () => {
-    try {
-      const { data } = await axios.get(api);
-
-      set({ todo: data.data });
-    } catch (error) {
-      console.log(error);
-    }
+  deleteUser: (id) => {
+    set((state) => ({
+      users: state.users.filter((user) => user.id !== id)
+    }))
   },
 
-  addUser: async (newUser) => {
-    try {
-      const formData = new FormData();
-
-      formData.append("name", newUser.name);
-      formData.append("description", newUser.description);
-
-      await axios.post(api, formData);
-
-      await get().getData();
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
+  addUser: (newUser) => {
+    set((state) => ({
+      users: [...state.users, newUser]
+    }))
   },
-
-  editUser: async (id, updatedUser) => {
-    try {
-      await axios.put(api, {
-        id: id,
-        name: updatedUser.name,
-        description: updatedUser.description,
-      });
-
-      await get().getData();
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
-  },
-
-  deleteUser: async (id) => {
-    try {
-      await axios.delete(`${api}?id=${id}`);
-
-      await get().getData();
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
-  },
-}));
+    editUser: (editedUser) => {
+    set((state) => ({
+      users:  state.users.map((e)=>e.id===editedUser.id?editedUser:e)
+    }))
+  }
+}))

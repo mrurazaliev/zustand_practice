@@ -1,81 +1,44 @@
-import { getData } from './counterSlice';
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import axios from 'axios';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+
+interface Todo{
+  id:number,
+  name:string
+}
 
 const initialState = {
-  todo: [ ],
-  isLoading:false,
-  error:null
+  users: [
+    {
+       id: 1,
+       name: 'Muhammad'
+     },
+    { 
+      id: 2,
+      name: 'Ali'
+     },
+    { 
+      id: 3,
+       name: 'Vali' 
+      }
+  ]
 }
-const api = 'https://6a56fde4b17de7bebbdeb233.mockapi.io/data'
 
-export const getData=createAsyncThunk("counter/getData",
-  async()=>{
-   const {data}=await axios.get(api)
-   return data
-  }
-)
-//delete
-export const deleteUser=createAsyncThunk("counter/deleteUser",
-  async(id)=>{
-    await axios.delete(api+"/"+id)
-  }
-)
-//edit
-export const editUser=createAsyncThunk("counter/editUser",
-  async(editedUser)=>{
-    const data = await axios.put(`${api}/${editUser.id}`,editUser)
-     return data
-  }
-)
-//add
-export const addUser=createAsyncThunk("counter/addUser",
-  async(newUser)=>{
-    await axios.post(api,newUser)
-  }
-)
 const counterSlice = createSlice({
   name: 'counter',
   initialState,
-  reducers: {},
-  extraReducers:(builder)=>{
-   builder
-   .addCase(getData.pending,(state)=>{
-    state.isLoading=true
-    state.error=null
-   })
-   .addCase(getData.fulfilled,(state,action)=>{
-    state.isLoading=false
-    state.todo=action.payload
-   })
-   .addCase(getData.rejected,(state,action)=>{
-    state.isLoading=false
-    state.error=action.error.message??"error"
-   })
-   .addCase(editUser.pending,(state)=>{
-    state.isLoading=true
-    state.error=null
-   })
-   .addCase(editUser.fulfilled,(state,action)=>{
-    state.isLoading=false
-    state.todo=state.todo.map((e)=>e.id===action.payload.id?{...e,...action.payload}:e)
-   })
-   .addCase(editUser.rejected,(state,action)=>{
-    state.isLoading=false
-    state.error.action.error.message??"error"
-   })
-   .addCase(addUser.pending,(state)=>{
-   state.isLoading=true
-   state.error=null
-   })
-   .addCase(addUser.fulfilled,(state,action)=>{
-    state.isLoading=false
-    state.todo=[...state.todo,action.payload]
-   })
-   .addCase(addUser.rejected,(state,action)=>{
-    state.isLoading=false
-    state.error=action.error.message??"error"
-   })
-  }
+ reducers: {
+  deleteUser: (state, action: PayloadAction<number>) => {
+    state.users = state.users.filter(
+      (user) => user.id !== action.payload
+    )
+  },
+addUser: (state,action: PayloadAction<Todo>) => {
+  state.users = [...state.users, action.payload]
+},
+editUser:(state,action:PayloadAction<Todo>)=>{
+  state.users=state.users.map((e)=>e.id===action.payload)
+},
+}
 })
+
 export default counterSlice.reducer
+export const { deleteUser,addUser,editUser } = counterSlice.actions
