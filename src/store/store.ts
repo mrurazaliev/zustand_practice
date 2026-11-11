@@ -1,11 +1,11 @@
-import { configureStore } from "@reduxjs/toolkit";
-import counterReducer from "../slice/counterSlice";
+import { configureStore } from '@reduxjs/toolkit'
+import counterReducer from '../slice/counterSlice'
 
 export const store = configureStore({
   reducer: {
-    Todochka: counterReducer,
-  },
-});
+    counter: counterReducer
+  }
+})
 
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+export type RootState = ReturnType<typeof store.getState>
+export type AppDispatch = typeof store.dispatch

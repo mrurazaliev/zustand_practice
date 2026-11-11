@@ -1,50 +1,81 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
+import { getData } from './counterSlice';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import axios from 'axios';
 
-export interface Todo{
-    id:number,
-    name:string,
-    job:string
+const initialState = {
+  todo: [ ],
+  isLoading:false,
+  error:null
 }
+const api = 'https://6a56fde4b17de7bebbdeb233.mockapi.io/data'
 
-interface CounterState{
-    todo:Todo[]
-}
-
-const initialState:CounterState={
-todo:[
-    {
-        id:1,
-        name:"Muhammad",
-        job:"student"
-    },
-        {
-        id:2,
-        name:"Sanjar",
-        job:"Builder"
-    },
-        {
-        id:3,
-        name:"Jonibek",
-        job:"Developer"
-    }
-],
-}
-
- const counterSlice=createSlice({
- name:"Todochka",
- initialState,
-
- reducers:{
-  deleteUser:(state,action:PayloadAction<number>)=>{
-    state.todo=state.todo.filter((e)=>e.id!==action.payload)
-  },
-  addUSer:(state,action:PayloadAction<Todo>)=>{
-    state.todo.push(action.payload)
-  },
-  editUser:(state,action:PayloadAction<Todo>)=>{
-    state.todo=state.todo.map((e)=>e.id===action.payload.id?action.payload:e)
+export const getData=createAsyncThunk("counter/getData",
+  async()=>{
+   const {data}=await axios.get(api)
+   return data
   }
- }
+)
+//delete
+export const deleteUser=createAsyncThunk("counter/deleteUser",
+  async(id)=>{
+    await axios.delete(api+"/"+id)
+  }
+)
+//edit
+export const editUser=createAsyncThunk("counter/editUser",
+  async(editedUser)=>{
+    const data = await axios.put(`${api}/${editUser.id}`,editUser)
+     return data
+  }
+)
+//add
+export const addUser=createAsyncThunk("counter/addUser",
+  async(newUser)=>{
+    await axios.post(api,newUser)
+  }
+)
+const counterSlice = createSlice({
+  name: 'counter',
+  initialState,
+  reducers: {},
+  extraReducers:(builder)=>{
+   builder
+   .addCase(getData.pending,(state)=>{
+    state.isLoading=true
+    state.error=null
+   })
+   .addCase(getData.fulfilled,(state,action)=>{
+    state.isLoading=false
+    state.todo=action.payload
+   })
+   .addCase(getData.rejected,(state,action)=>{
+    state.isLoading=false
+    state.error=action.error.message??"error"
+   })
+   .addCase(editUser.pending,(state)=>{
+    state.isLoading=true
+    state.error=null
+   })
+   .addCase(editUser.fulfilled,(state,action)=>{
+    state.isLoading=false
+    state.todo=state.todo.map((e)=>e.id===action.payload.id?{...e,...action.payload}:e)
+   })
+   .addCase(editUser.rejected,(state,action)=>{
+    state.isLoading=false
+    state.error.action.error.message??"error"
+   })
+   .addCase(addUser.pending,(state)=>{
+   state.isLoading=true
+   state.error=null
+   })
+   .addCase(addUser.fulfilled,(state,action)=>{
+    state.isLoading=false
+    state.todo=[...state.todo,action.payload]
+   })
+   .addCase(addUser.rejected,(state,action)=>{
+    state.isLoading=false
+    state.error=action.error.message??"error"
+   })
+  }
 })
-export const {deleteUser,addUSer,editUser}=counterSlice.actions
 export default counterSlice.reducer
