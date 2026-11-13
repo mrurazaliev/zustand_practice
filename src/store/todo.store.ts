@@ -6,7 +6,7 @@ interface Todo {
 }
 
 interface TodoStore {
-  users: User[]
+  users: Todo[]
   deleteUser: (id: number) => void
   addUser: (newUser: Todo) => void
   editUser:(editedUser:Todo)=>void
