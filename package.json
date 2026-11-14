@@ -18,6 +18,7 @@
     "axios": "^1.21.1",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
+    "formik": "^2.4.9",
     "jotai": "^3.0.2",
     "lucide-react": "^1.70.0",
     "react": "^19.2.8",

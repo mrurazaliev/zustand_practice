@@ -1,23 +1,28 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import { email } from 'zod'
 
-interface Todo{
+export interface Todo{
   id:number,
-  name:string
+  name:string,
+  email:string
 }
 
 const initialState = {
   users: [
     {
        id: 1,
-       name: 'Muhammad'
+       name: 'Muhammad',
+       email:"exampleemail@gmail.com"
      },
     { 
       id: 2,
-      name: 'Ali'
+      name: 'Ali',
+       email:"exampleemail@gmail.com"
      },
     { 
       id: 3,
-       name: 'Vali' 
+       name: 'Vali' ,
+       email:"exampleemail@gmail.com"
       }
   ]
 }
@@ -35,7 +40,7 @@ addUser: (state,action: PayloadAction<Todo>) => {
   state.users = [...state.users, action.payload]
 },
 editUser:(state,action:PayloadAction<Todo>)=>{
-  state.users=state.users.map((e)=>e.id===action.payload)
+  state.users=state.users.map((e)=>e.id===action.payload?e:action.payload)
 },
 }
 })
