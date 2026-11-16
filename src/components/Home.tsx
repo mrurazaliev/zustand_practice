@@ -1,113 +1,157 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { addUser, deleteUser, editUser, type Todo } from '../slice/counterSlice';
-import { useFormik } from 'formik';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useGetUsersQuery, useAddUserMutation,useEditUserMutation, useDeleteUserMutation, type User, } from '../api/UserApi'; 
 import { useState } from 'react';
-import type { RootState } from '../store/store'; 
 
-function Home() {
-  const dispatch = useDispatch();
-  const todo = useSelector((state: RootState) => state.counter.users);
+const userSchema = z.object({
+  name: z.string().min(5, 'Имя должно содержать минимум 5 символа'),
+  email: z.string().email('Некорректный формат email'),
+});
 
-  const [open, setOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+type UserFormData = z.infer<typeof userSchema>;
 
-  const formik = useFormik({
-    initialValues: {
-      name: '',
-      email: '',
-    },
-    onSubmit: (values) => {
-      if (editingId !== null) {
-        dispatch(
-          editUser({
-            id: editingId,
-            name: values.name,
-            email: values.email,
-      })
-        );
-      }
-      else{
-        dispatch(addUser({
-          id:Date.now(),
-          name:values.name,
-          email:values.email
-        }))
-      }
-      setOpen(false); 
-      setEditingId(null);
-    },
-  });
+export const Home = () => {
+    
+    const { data:users=[], isLoading, isError } = useGetUsersQuery();
+    console.log(users);
+    
+  const [addUser] = useAddUserMutation();
+  const [editUser] = useEditUserMutation();
+  const [deleteUser] = useDeleteUserMutation();
 
-  function handleClick(id: number) {
-    dispatch(deleteUser(id));
-  }
-function handleOpenAdd() {
-   setEditingId(null)
-   formik.setValues({
-    name:"",
-    email:""
-   })
-   setOpen(true)
-}
+  const [editingId, setEditingId] = useState<number | null>(null);
 
-  function handleOpenEdit(e: Todo) {
-    setEditingId(e.id);
-    formik.setValues({
-      name: e.name,
-      email: e.email,
-    });
-    setOpen(true);
-  }
+  const {  register: registerAdd, handleSubmit: handleSubmitAdd, reset: resetAdd, formState: { errors: errorsAdd },
+  } = useForm<UserFormData>({
+    resolver: zodResolver(userSchema),
+  });
 
-  return (
-    <div>
-      <div>Users List</div>
-      <button onClick={handleOpenAdd}>+add user</button>
-      <div>
-        {open && (
-          <form onSubmit={formik.handleSubmit}>
-           <div>
-              <label htmlFor="name">User Name</label>
-              <input
-                type="text"
-                onChange={formik.handleChange}
-                value={formik.values.name} 
-                name="name"
-              />
-            </div>
+  const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEdit, formState: { errors: errorsEdit },
+ } = useForm<UserFormData>({
+    resolver: zodResolver(userSchema),
+  });
 
-            <div>
-              <label htmlFor="email">Email Address</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                onChange={formik.handleChange}
-                value={formik.values.email}
-              />
-            </div>
+  const onAddSubmit = async (data: UserFormData) => {
+    await addUser(data);
+    resetAdd();
+  };
 
-            <button type="submit">Save</button>
-           
-            <button type="button" onClick={() => setOpen(false)}>
-              Cancel
-            </button>
-          </form>
-        )}
-      </div>
+  const startEdit = (user: User) => {
+    setEditingId(user.id);
+    resetEdit({
+      name: user.name,
+      email: user.email,
+    });
+  };
 
-      {todo.map((e) => {
-        return (
-          <div key={e.id} style={{ border: '1px solid #ccc', margin: '8px', padding: '8px' }}>
-            <h2>{e.name}</h2>
-            <p>{e.email}</p>
-            <button onClick={() => handleClick(e.id)}>Delete</button>
-            <button onClick={() => handleOpenEdit(e)}>Edit</button>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+  const onEditSubmit = async (data: UserFormData) => {
+    if (editingId === null) return;
+    await editUser({ id: editingId, ...data });
+    setEditingId(null);
+  };
 
-export default Home; 
+  if (isLoading) return <div className="p-5">Загрузка...</div>;
+  if (isError) return <div className="p-5 text-red-500">Ошибка при загрузке данных</div>;
+
+  return (
+    <div className="max-w-[800px] mx-auto p-5">
+      <h1 className="text-2xl font-bold mb-4">Пользователи</h1>
+
+      <form onSubmit={handleSubmitAdd(onAddSubmit)} className="flex flex-col gap-3 mb-6 p-4 border rounded bg-gray-50">
+        <h2 className="font-semibold text-lg">Добавить нового пользователя</h2>
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Имя"
+              {...registerAdd('name')}
+              className="border p-2 rounded w-full"
+            />
+            {errorsAdd.name && <span className="text-red-500 text-sm">{errorsAdd.name.message}</span>}
+          </div>
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Description"
+              {...registerAdd('description')}
+              className="border p-2 rounded w-full"
+            />
+            {errorsAdd.email && <span className="text-red-500 text-sm">{errorsAdd.email.message}</span>}
+          </div>
+          <button type="submit" className="bg-blue-600 text-white px-5 py-2 rounded h-fit">
+            Добавить
+          </button>
+        </div>
+      </form>
+
+      
+      <ul className="space-y-3">
+
+        {users.data?.map((user) => (
+          <li key={user.id} className="border p-3 rounded flex items-center justify-between gap-4"
+          >
+
+            {editingId === user.id ? (
+              <form onSubmit={handleSubmitEdit(onEditSubmit)} className="flex gap-2 flex-1 items-center">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    {...registerEdit('name')}
+                    className="border p-1 rounded w-full"
+                  />
+                  {errorsEdit.name && <span className="text-red-500 text-xs">{errorsEdit.name.message}</span>}
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="email"
+                    {...registerEdit('email')}
+                    className="border p-1 rounded w-full"
+                  />
+                  {errorsEdit.email && <span className="text-red-500 text-xs">{errorsEdit.email.message}</span>}
+                </div>
+                <button
+                  type="submit"
+                  className="bg-green-600 text-white px-3 py-1 rounded h-fit"
+                >
+                  Сохранить
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingId(null)}
+                  className="bg-gray-400 text-white px-3 py-1 rounded h-fit"
+                >
+                  Отмена
+                </button>
+              </form>
+            ) : (
+              
+              <>
+                <div>
+                  <p className="font-semibold">{user.name}</p>
+                  <p className="text-sm text-gray-600">{user.description}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => startEdit(user)}
+                    className="bg-yellow-500 text-white px-3 py-1 rounded"
+                  >
+                    Изменить
+                  </button>
+                  <button
+                    onClick={() => deleteUser(user.id)}
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                  >
+                    Удалить
+                  </button>
+                </div>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default Home;
