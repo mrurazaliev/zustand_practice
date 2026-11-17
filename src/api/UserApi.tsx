@@ -4,6 +4,12 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  description?: string;
+}
+
+
+interface UsersResponse {
+  data: User[];
 }
 
 export const userApi = createApi({
@@ -13,38 +19,42 @@ export const userApi = createApi({
   }),
   tagTypes: ['User'],
   endpoints: (builder) => ({
-   
-    getUsers: builder.query<User[], void>({
-      query: () => `/api/to-dos`,
+    
+  
+    getUsers: builder.query<UsersResponse, void>({
+      query: () => `/api/categories`,
       providesTags: ['User'],
     }),
 
+   
     addUser: builder.mutation<User, Partial<User>>({
       query: (newUser) => ({
-        url: '/api/to-dos',
+        url: '/api/categories',
         method: 'POST',
-        body: newUser,
+        body: newUser, 
       }),
       invalidatesTags: ['User'],
     }),
 
+ 
     editUser: builder.mutation<User, Partial<User> & { id: number }>({
       query: ({ id, ...updatedData }) => ({
-        url: `/api/to-dos`,
+        url: `/api/categories`, 
         method: 'PUT',
-        body: updatedData,
+        body: { id, ...updatedData },
       }),
       invalidatesTags: ['User'],
     }),
 
-    deleteUser: builder.mutation<{ success: boolean; id: number }, number>({
-      query: (id) => ({
-        url: `/api/to-dos?id=${id}`,
+deleteUser: builder.mutation<void, User | { id: number }>({
+      query: (userToDelete) => ({
+        url: `/api/categories`,
         method: 'DELETE',
+        body: userToDelete,
       }),
       invalidatesTags: ['User'],
     }),
-  }),
+  })
 });
 
 export const {

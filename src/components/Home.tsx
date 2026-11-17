@@ -1,20 +1,18 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useGetUsersQuery, useAddUserMutation,useEditUserMutation, useDeleteUserMutation, type User, } from '../api/UserApi'; 
+import { useGetUsersQuery, useAddUserMutation, useEditUserMutation, useDeleteUserMutation, type User } from '../api/UserApi'; 
 import { useState } from 'react';
 
 const userSchema = z.object({
-  name: z.string().min(5, 'Имя должно содержать минимум 5 символа'),
-  email: z.string().email('Некорректный формат email'),
+  name: z.string().min(5, 'Имя должно содержать минимум 5 символов'),
+  description: z.string().min(1, 'Описание обязательно'),
 });
 
 type UserFormData = z.infer<typeof userSchema>;
 
 export const Home = () => {
-    
-    const { data:users=[], isLoading, isError } = useGetUsersQuery();
-    console.log(users);
+  const { data: users = [], isLoading, isError } = useGetUsersQuery();
     
   const [addUser] = useAddUserMutation();
   const [editUser] = useEditUserMutation();
@@ -22,13 +20,21 @@ export const Home = () => {
 
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  const {  register: registerAdd, handleSubmit: handleSubmitAdd, reset: resetAdd, formState: { errors: errorsAdd },
+  const { 
+    register: registerAdd, 
+    handleSubmit: handleSubmitAdd, 
+    reset: resetAdd, 
+    formState: { errors: errorsAdd } 
   } = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
   });
 
-  const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEdit, formState: { errors: errorsEdit },
- } = useForm<UserFormData>({
+  const { 
+    register: registerEdit, 
+    handleSubmit: handleSubmitEdit, 
+    reset: resetEdit, 
+    formState: { errors: errorsEdit } 
+  } = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
   });
 
@@ -41,7 +47,7 @@ export const Home = () => {
     setEditingId(user.id);
     resetEdit({
       name: user.name,
-      email: user.email,
+      description: user.description,
     });
   };
 
@@ -58,6 +64,7 @@ export const Home = () => {
     <div className="max-w-[800px] mx-auto p-5">
       <h1 className="text-2xl font-bold mb-4">Пользователи</h1>
 
+      {/* Форма добавления */}
       <form onSubmit={handleSubmitAdd(onAddSubmit)} className="flex flex-col gap-3 mb-6 p-4 border rounded bg-gray-50">
         <h2 className="font-semibold text-lg">Добавить нового пользователя</h2>
         <div className="flex gap-4">
@@ -70,6 +77,7 @@ export const Home = () => {
             />
             {errorsAdd.name && <span className="text-red-500 text-sm">{errorsAdd.name.message}</span>}
           </div>
+          
           <div className="flex-1">
             <input
               type="text"
@@ -77,21 +85,19 @@ export const Home = () => {
               {...registerAdd('description')}
               className="border p-2 rounded w-full"
             />
-            {errorsAdd.email && <span className="text-red-500 text-sm">{errorsAdd.email.message}</span>}
+            {errorsAdd.description && <span className="text-red-500 text-sm">{errorsAdd.description.message}</span>}
           </div>
+
           <button type="submit" className="bg-blue-600 text-white px-5 py-2 rounded h-fit">
             Добавить
           </button>
         </div>
       </form>
 
-      
+      {/* Список пользователей */}
       <ul className="space-y-3">
-
-        {users.data?.map((user) => (
-          <li key={user.id} className="border p-3 rounded flex items-center justify-between gap-4"
-          >
-
+        {users?.data.map((user) => (
+          <li key={user.id} className="border p-3 rounded flex items-center justify-between gap-4">
             {editingId === user.id ? (
               <form onSubmit={handleSubmitEdit(onEditSubmit)} className="flex gap-2 flex-1 items-center">
                 <div className="flex-1">
@@ -104,42 +110,38 @@ export const Home = () => {
                 </div>
                 <div className="flex-1">
                   <input
-                    type="email"
-                    {...registerEdit('email')}
+                    type="text"
+                    {...registerEdit('description')}
                     className="border p-1 rounded w-full"
                   />
-                  {errorsEdit.email && <span className="text-red-500 text-xs">{errorsEdit.email.message}</span>}
+                  {errorsEdit.description && <span className="text-red-500 text-xs">{errorsEdit.description.message}</span>}
                 </div>
-                <button
-                  type="submit"
-                  className="bg-green-600 text-white px-3 py-1 rounded h-fit"
-                >
+                <button type="submit" className="bg-green-600 text-white px-3 py-1 rounded h-fit">
                   Сохранить
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingId(null)}
+                <button 
+                  type="button" 
+                  onClick={() => setEditingId(null)} 
                   className="bg-gray-400 text-white px-3 py-1 rounded h-fit"
                 >
                   Отмена
                 </button>
               </form>
             ) : (
-              
               <>
                 <div>
                   <p className="font-semibold">{user.name}</p>
                   <p className="text-sm text-gray-600">{user.description}</p>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => startEdit(user)}
+                  <button 
+                    onClick={() => startEdit(user)} 
                     className="bg-yellow-500 text-white px-3 py-1 rounded"
                   >
                     Изменить
                   </button>
-                  <button
-                    onClick={() => deleteUser(user.id)}
+                  <button 
+                    onClick={() => deleteUser(user)} 
                     className="bg-red-600 text-white px-3 py-1 rounded"
                   >
                     Удалить
