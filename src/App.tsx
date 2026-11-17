@@ -1,9 +1,9 @@
-import About from './components/About'
+import { Home } from 'lucide-react'
 
 function App() {
   return (
     <div>
-       <About/>
+       <Home/>
     </div>
   )
 }

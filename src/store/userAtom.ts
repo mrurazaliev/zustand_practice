@@ -7,14 +7,12 @@ export interface User {
   description: string;
 }
 
-const API_URL = 'https://to-dos-api.softclub.tj/api/categories';
+const API_URL = 'https://to-dos-api.softclub.tj/api/to-dos';
 
-// Базовые атомы состояния
 export const usersAtom = atom<User[]>([]);
 export const isLoadingAtom = atom<boolean>(false);
 export const isErrorAtom = atom<boolean>(false);
 
-// Атомы-экшены (действия)
 export const fetchUsersAtom = atom(
   null,
   async (_get, set) => {
@@ -22,8 +20,7 @@ export const fetchUsersAtom = atom(
     set(isErrorAtom, false);
     try {
       const response = await axios.get(API_URL);
-      // Если бэкенд возвращает объект с массивом внутри, например response.data.data
-      set(usersAtom, response.data.data || response.data);
+      set(usersAtom, response.data.data );
     } catch (error) {
       console.error(error);
       set(isErrorAtom, true);
@@ -38,7 +35,6 @@ export const addUserAtom = atom(
   async (get, set, newUser: Omit<User, 'id'>) => {
     try {
       await axios.post(API_URL, newUser);
-      // Перезапрашиваем список после добавления
       await get(fetchUsersAtom)();
     } catch (error) {
       console.error(error);
@@ -62,7 +58,6 @@ export const deleteUserAtom = atom(
   null,
   async (get, set, user: User) => {
     try {
-      // Отправляем весь объект пользователя в теле запроса (как требует Swagger)
       await axios.delete(API_URL, { data: user });
       await get(fetchUsersAtom)();
     } catch (error) {

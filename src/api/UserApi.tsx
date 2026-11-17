@@ -22,14 +22,14 @@ export const userApi = createApi({
     
   
     getUsers: builder.query<UsersResponse, void>({
-      query: () => `/api/categories`,
+      query: () => `/api/to-dos`,
       providesTags: ['User'],
     }),
 
    
     addUser: builder.mutation<User, Partial<User>>({
       query: (newUser) => ({
-        url: '/api/categories',
+        url: '/api/to-dos',
         method: 'POST',
         body: newUser, 
       }),
@@ -39,7 +39,7 @@ export const userApi = createApi({
  
     editUser: builder.mutation<User, Partial<User> & { id: number }>({
       query: ({ id, ...updatedData }) => ({
-        url: `/api/categories`, 
+        url: `/api/to-dos`, 
         method: 'PUT',
         body: { id, ...updatedData },
       }),
@@ -47,11 +47,9 @@ export const userApi = createApi({
     }),
 
 deleteUser: builder.mutation<void, User | { id: number }>({
-      query: (userToDelete) => ({
-        url: `/api/categories`,
-        method: 'DELETE',
-        body: userToDelete,
-      }),
+      query: (id) => ({
+        url: `/api/to-dos?id=${id}`,
+        method: 'DELETE', }),
       invalidatesTags: ['User'],
     }),
   })

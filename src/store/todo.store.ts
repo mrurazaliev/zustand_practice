@@ -16,10 +16,10 @@ interface TodoStore {
   getUsers: () => Promise<void>;
   addUser: (newUser: Omit<Todo, 'id'>) => Promise<void>;
   editUser: (updatedUser: Todo) => Promise<void>;
-  deleteUser: (user: Todo) => Promise<void>; 
+  deleteUser: (id :number) => Promise<void>; 
 }
 
-const API_URL = 'https://to-dos-api.softclub.tj/api/categories'
+const API_URL = 'https://to-dos-api.softclub.tj/api/to-dos'
 
 export const useUserStore = create<TodoStore>()((set,get) => ({
   users: [],
@@ -31,7 +31,7 @@ export const useUserStore = create<TodoStore>()((set,get) => ({
     set({ isLoading: true, isError: false });
     try {
       const response = await axios.get(API_URL);
-      set({ users: response.data.data || response.data, isLoading: false });
+      set({ users: response.data.data, isLoading: false });
     } catch (error) {
       console.error(error);
     }
@@ -55,11 +55,9 @@ export const useUserStore = create<TodoStore>()((set,get) => ({
     }
   },
 
-  deleteUser: async (user) => {
+  deleteUser: async (id) => {
     try {
-      await axios.delete(API_URL, {
-        data: user,
-      });
+      await axios.delete(`API_URL?id=${id}`)
       get().getUsers();
     } catch (error) {
       console.error(error);
