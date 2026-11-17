@@ -64,7 +64,6 @@ export const Home = () => {
     <div className="max-w-[800px] mx-auto p-5">
       <h1 className="text-2xl font-bold mb-4">Пользователи</h1>
 
-      {/* Форма добавления */}
       <form onSubmit={handleSubmitAdd(onAddSubmit)} className="flex flex-col gap-3 mb-6 p-4 border rounded bg-gray-50">
         <h2 className="font-semibold text-lg">Добавить нового пользователя</h2>
         <div className="flex gap-4">
@@ -94,7 +93,6 @@ export const Home = () => {
         </div>
       </form>
 
-      {/* Список пользователей */}
       <ul className="space-y-3">
         {users?.data.map((user) => (
           <li key={user.id} className="border p-3 rounded flex items-center justify-between gap-4">
